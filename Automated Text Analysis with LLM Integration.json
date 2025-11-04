@@ -1,0 +1,314 @@
+{
+  "name": "Automated Text Analysis with LLM Integration - FIXED",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "text-analysis",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e0ca45ba-8d75-4b46-a86c-8aa99155c7b1",
+      "name": "Receive Text Analysis Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [96, 48],
+      "webhookId": "245940e2-4ceb-4b38-a226-0f24387f9484"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "907236b5-3937-4d83-832e-9163bf9459ef",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [320, 48]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.body.analysisType }}",
+              "rightValue": "summary",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "dd27697f-6345-47de-8b52-af5714563c00",
+      "name": "Check Analysis Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [544, 48]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gemini-2.0-flash-exp"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.body.text }}"
+            }
+          ]
+        },
+        "options": {
+          "systemMessage": "You are a text summarization assistant. Provide a clear, concise summary of the given text in 2–3 sentences. Focus on the main points and key information."
+        }
+      },
+      "id": "600820fa-3a78-4699-9a46-7e9aa764d5e5",
+      "name": "Generate Summary",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [768, -48],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "pZwc6rhsEJ7IRjxy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gemini-2.0-flash-exp"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.body.text }}"
+            }
+          ]
+        },
+        "options": {
+          "systemMessage": "You are a sentiment analysis assistant. Analyze the sentiment of the given text and respond with ONLY one of these values: 'Positive', 'Negative', or 'Neutral'. Then provide a brief explanation (1–2 sentences) of why you classified it that way."
+        }
+      },
+      "id": "329f40fa-c497-450b-b5ac-8029ceb64b60",
+      "name": "Analyze Sentiment",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [768, 144],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6sfyDbIWk5Upi6N6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "id-2",
+              "name": "analysisType",
+              "value": "summary",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "analysis",
+              "value": "={{ $json.message || $json.text || $json.response || $json.output || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "originalText",
+              "value": "={{ $('Workflow Configuration').first().json.body.text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "656619dd-14d2-4779-af5c-f712579330cc",
+      "name": "Format Summary Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, -48]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "id-2",
+              "name": "analysisType",
+              "value": "sentiment",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "analysis",
+              "value": "={{ $json.message || $json.text || $json.response || $json.output || JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "originalText",
+              "value": "={{ $('Workflow Configuration').first().json.body.text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "d85ed078-ddf8-49d1-a177-65f11a1e1cf1",
+      "name": "Format Sentiment Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 144]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "49c40d64-ce69-4fa1-a07b-03a7a961bb2c",
+      "name": "Return Analysis Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1344, 48]
+    }
+  ],
+  "connections": {
+    "Receive Text Analysis Request": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Check Analysis Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Analysis Type": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze Sentiment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary": {
+      "main": [
+        [
+          {
+            "node": "Format Summary Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Sentiment": {
+      "main": [
+        [
+          {
+            "node": "Format Sentiment Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary Response": {
+      "main": [
+        [
+          {
+            "node": "Return Analysis Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sentiment Response": {
+      "main": [
+        [
+          {
+            "node": "Return Analysis Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fixed-2025-11-04",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "FVYGgH8qHy3Mmy5k",
+  "tags": []
+}
